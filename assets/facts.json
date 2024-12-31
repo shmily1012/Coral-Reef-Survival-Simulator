@@ -1,0 +1,26 @@
+{
+    "temperature": [
+        "Coral reefs thrive in water temperatures between 23-29°C (73-84°F).",
+        "A temperature increase of just 1-2°C can trigger coral bleaching.",
+        "Global warming is the biggest threat to coral reefs worldwide.",
+        "Some corals can adapt to temperature changes, but they need time."
+    ],
+    "ph": [
+        "Ocean acidification makes it harder for corals to build their skeletons.",
+        "The ocean's pH has dropped by 0.1 units since the industrial revolution.",
+        "Carbon dioxide from the atmosphere dissolves in seawater, making it more acidic.",
+        "Acidic water can dissolve coral skeletons over time."
+    ],
+    "salinity": [
+        "Most coral reefs need a salinity level between 32-42 parts per thousand.",
+        "Heavy rains can temporarily lower salinity near coastal reefs.",
+        "Changes in salinity can stress corals and their symbiotic algae.",
+        "Climate change can affect ocean salinity through changes in rainfall patterns."
+    ],
+    "general": [
+        "Coral reefs support about 25% of all marine species.",
+        "The Great Barrier Reef is the largest living structure on Earth.",
+        "Healthy coral reefs can reduce coastal wave energy by up to 97%.",
+        "Some corals can live for hundreds or even thousands of years."
+    ]
+} 
