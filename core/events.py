@@ -14,6 +14,7 @@ Key Features:
 
 import random
 import config
+from utils.logger import logger, log_exception
 
 class Event:
     """
@@ -44,6 +45,7 @@ class EventSystem:
         self.warning_time = 5.0  # 5 second warning before event
         self.pending_event = None  # Store the upcoming event
         self.is_warning = False  # Track if we're in warning phase
+        self.difficulty_multiplier = 1.0  # Add difficulty multiplier
         
         # Define possible events and their effects
         self.possible_events = [
@@ -73,45 +75,82 @@ class EventSystem:
             }
         ]
 
+    def adjust_difficulty(self, multiplier):
+        """
+        Adjust the difficulty of events.
+        
+        Args:
+            multiplier (float): Multiplier for event effects and frequency
+        """
+        logger.info(f"Adjusting event difficulty with multiplier: {multiplier}")
+        self.difficulty_multiplier = multiplier
+        
+        # Adjust event interval based on difficulty
+        self.event_interval = random.uniform(
+            15.0 / multiplier,  # Events happen more frequently at higher difficulty
+            20.0 / multiplier
+        )
+        
+        # Adjust minimum gap between events
+        self.min_gap_between_events = max(5.0, 10.0 / multiplier)
+        
     def update(self, delta_time):
-        # Update cooldown timer
-        if self.cooldown_timer > 0:
-            self.cooldown_timer -= delta_time
-            return
+        try:
+            # Update cooldown timer
+            if self.cooldown_timer > 0:
+                self.cooldown_timer -= delta_time
+                return
 
-        # Update existing events
-        new_active_events = []
-        for event in self.active_events:
-            event.time_remaining -= delta_time
-            if event.time_remaining > 0:
-                new_active_events.append(event)
-            else:
-                # When event ends, ensure minimum gap by setting cooldown
-                self.cooldown_timer = max(event.cooldown, self.min_gap_between_events)
-        self.active_events = new_active_events
+            # Update existing events
+            new_active_events = []
+            for event in self.active_events:
+                event.time_remaining -= delta_time
+                if event.time_remaining > 0:
+                    new_active_events.append(event)
+                else:
+                    logger.debug(f"Event ended: {event.description}")
+                    self.cooldown_timer = max(event.cooldown, self.min_gap_between_events)
+            self.active_events = new_active_events
 
-        # Generate and handle warnings/events
-        if not self.active_events and self.cooldown_timer <= 0:
-            self.event_timer += delta_time
-            
-            if self.event_timer >= self.event_interval - self.warning_time and not self.is_warning:
-                # Start warning phase
-                self.is_warning = True
-                self._generate_pending_event()
-            
-            elif self.event_timer >= self.event_interval:
-                # Convert pending event to active event
-                self.event_timer = 0
-                self.event_interval = random.uniform(15.0, 20.0)
-                self.is_warning = False
-                if self.pending_event:
-                    self.active_events.append(self.pending_event)
-                    self.events_handled += 1
-                    self.pending_event = None
+            # Generate and handle warnings/events
+            if not self.active_events and self.cooldown_timer <= 0:
+                self.event_timer += delta_time
+                
+                if self.event_timer >= self.event_interval - self.warning_time and not self.is_warning:
+                    # Start warning phase
+                    self.is_warning = True
+                    self._generate_pending_event()
+                    logger.debug("Warning phase started")
+                
+                elif self.event_timer >= self.event_interval:
+                    # Convert pending event to active event
+                    self.event_timer = 0
+                    self.event_interval = random.uniform(15.0 / self.difficulty_multiplier, 
+                                                       20.0 / self.difficulty_multiplier)
+                    self.is_warning = False
+                    if self.pending_event:
+                        self.active_events.append(self.pending_event)
+                        self.events_handled += 1
+                        logger.debug(f"Event activated: {self.pending_event.description}")
+                        self.pending_event = None
+                    
+        except Exception as e:
+            log_exception(e, "Error in EventSystem update")
 
     def _generate_pending_event(self):
+        """Generate a new pending event with difficulty-adjusted effects."""
         event_data = random.choice(self.possible_events)
-        self.pending_event = Event(event_data["description"], event_data["effects"])
+        adjusted_effects = {}
+        
+        # Apply difficulty multiplier to event effects
+        for factor, value in event_data["effects"].items():
+            adjusted_effects[factor] = value * self.difficulty_multiplier
+            
+        self.pending_event = Event(
+            event_data["description"],
+            adjusted_effects
+        )
+        logger.debug(f"Generated new event: {event_data['description']} with multiplier {self.difficulty_multiplier}")
 
     def get_warning_message(self):
         """Get the warning message for the pending event."""

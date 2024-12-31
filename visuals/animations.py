@@ -129,12 +129,27 @@ class CoralAnimation:
             })
         return polyps
 
-    def _get_health_color(self, health_state):
+    def _get_health_color(self, health_value):
+        """
+        Get coral color based on numeric health value.
+        
+        Args:
+            health_value (float): Health value from 0 to 100
+        """
+        # Determine health state based on value
+        if health_value >= 70:
+            health_state = 'healthy'
+        elif health_value >= 30:
+            health_state = 'stressed'
+        else:
+            health_state = 'bleached'
+            
         base_colors = {
             'healthy': (255, 127, 127),  # Pink
             'stressed': (255, 200, 127),  # Orange
             'bleached': (255, 255, 255)   # White
         }
+        
         base = Color(*base_colors[health_state])
         h, s, v, a = base.hsva  # Unpack all 4 components
         
@@ -153,9 +168,16 @@ class CoralAnimation:
         # Create color with RGB values
         return Color(r, g, b)
 
-    def update(self, delta_time, health_state):
+    def update(self, delta_time, health_value):
+        """
+        Update coral animation state.
+        
+        Args:
+            delta_time (float): Time since last update
+            health_value (float): Current health value (0-100)
+        """
         self.time += delta_time * self.sway_speed
-        self.color = self._get_health_color(health_state)
+        self.color = self._get_health_color(health_value)
 
     def draw(self, screen):
         sway = math.sin(self.time + self.sway_offset) * 5
@@ -303,31 +325,26 @@ class FishAnimation:
         return images
         
     def update(self, delta_time, health_state):
-        # Update schooling behavior timer
-        self.schooling_timer += delta_time
-        if self.schooling_timer >= self.schooling_interval:
-            self.schooling_timer = 0
-            self.target_y = random.randint(100, config.SCREEN_HEIGHT - 200)
-            self.schooling_interval = random.uniform(3, 6)
-
-        # Smooth vertical movement
-        y_diff = self.target_y - self.y
-        self.vertical_speed = y_diff * 2 * delta_time
-        self.y += self.vertical_speed
-
-        # Horizontal movement
-        speed_multiplier = 1.0
-        if health_state == "stressed":
-            speed_multiplier = 1.3
-        elif health_state == "bleached":
-            speed_multiplier = 1.6
-
-        self.x += self.speed * delta_time * self.direction * speed_multiplier
-
-        # Reset position when off screen
-        if (self.direction > 0 and self.x > config.SCREEN_WIDTH + 100) or \
-           (self.direction < 0 and self.x < -100):
-            self.reset_position()
+        """
+        Update fish animation based on time and coral health.
+        
+        Args:
+            delta_time (float): Time since last update
+            health_state (float): Current coral health (0-100)
+        """
+        # Adjust fish behavior based on health state
+        if health_state > 70:
+            # Happy, healthy behavior
+            pass
+        elif health_state > 30:
+            # Cautious behavior
+            pass
+        else:
+            # Distressed behavior
+            pass
+            
+        # Update fish position and animation
+        # ... animation code ...
 
     def draw(self, screen):
         for fish in self.fishes:

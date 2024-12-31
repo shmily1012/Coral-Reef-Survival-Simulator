@@ -1,13 +1,14 @@
 import pygame
 import config
 from visuals.background_manager import BackgroundManager
+from visuals.animations import CoralAnimation, FishAnimation
 from core.facts_manager import FactsManager
 from audio.sound_manager import SoundManager
 from visuals.particle_system import ParticleSystem
 from ui.tutorial_overlay import TutorialOverlay
 from core.achievements import AchievementManager
 from core.power_ups import PowerUpManager
-from visuals.animations import CoralAnimation, FishAnimation
+from utils.logger import logger
 import math
 
 """
@@ -58,53 +59,84 @@ class Slider:
 
 class GameScreen:
     def __init__(self, screen, game_manager):
+        logger.info("Initializing GameScreen")
+        
         self.screen = screen
         self.game_manager = game_manager
         self.font = pygame.font.Font(None, 36)
         
-        # Create sliders
-        self.sliders = {
-            "temperature": Slider(100, 500, 200, 20, config.TEMP_MIN, config.TEMP_MAX, config.TEMP_OPTIMAL),
-            "ph": Slider(400, 500, 200, 20, config.PH_MIN, config.PH_MAX, config.PH_OPTIMAL),
-            "salinity": Slider(700, 500, 200, 20, config.SALINITY_MIN, config.SALINITY_MAX, config.SALINITY_OPTIMAL)
-        }
-        
-        self.background = BackgroundManager(screen)
-        
-        self.facts_manager = FactsManager()
-        self.sound_manager = SoundManager()
-        self.sound_manager.play_background_music()
-        
-        self.particle_system = ParticleSystem(screen)
-        self.tutorial = TutorialOverlay(screen)
-        
-        self.achievement_manager = AchievementManager(screen)
-        self.power_up_manager = PowerUpManager(screen, game_manager)
-        
-        self.corals = [
-            CoralAnimation(x, config.SCREEN_HEIGHT - 100) 
-            for x in range(100, config.SCREEN_WIDTH - 100, 150)
-        ]
-        self.fish_schools = [
-            FishAnimation(screen) for _ in range(3)
-        ]
-        
-        # Add timer for health regeneration
-        self.optimal_condition_timer = 0
-        self.REGEN_DELAY = 5.0  # 5 seconds delay before regeneration starts
-        self.REGEN_RATE = 1.0   # 1 health point per second
-        
+        try:
+            # Initialize background first
+            logger.debug("Initializing BackgroundManager")
+            self.background = BackgroundManager(screen)
+            
+            # Create coral animations
+            logger.debug("Creating coral animations")
+            self.corals = [
+                CoralAnimation(x, config.SCREEN_HEIGHT - 100) 
+                for x in range(100, config.SCREEN_WIDTH - 100, 150)
+            ]
+            logger.info(f"Created {len(self.corals)} coral animations")
+            
+            # Create fish schools
+            logger.debug("Creating fish schools")
+            self.fish_schools = [
+                FishAnimation(screen) for _ in range(3)
+            ]
+            logger.info(f"Created {len(self.fish_schools)} fish schools")
+            
+            # Create sliders
+            logger.debug("Initializing environmental control sliders")
+            self.sliders = {
+                "temperature": Slider(100, 500, 200, 20, config.TEMP_MIN, config.TEMP_MAX, config.TEMP_OPTIMAL),
+                "ph": Slider(400, 500, 200, 20, config.PH_MIN, config.PH_MAX, config.PH_OPTIMAL),
+                "salinity": Slider(700, 500, 200, 20, config.SALINITY_MIN, config.SALINITY_MAX, config.SALINITY_OPTIMAL)
+            }
+            
+            # Initialize other managers
+            logger.debug("Initializing game managers")
+            self.facts_manager = FactsManager()
+            self.sound_manager = SoundManager()
+            self.particle_system = ParticleSystem(screen)
+            self.achievement_manager = AchievementManager(screen)
+            self.power_up_manager = PowerUpManager(screen, game_manager)
+            
+            # Initialize tutorial
+            logger.debug("Initializing tutorial overlay")
+            self.tutorial = TutorialOverlay(screen)
+            self.tutorial.active = True
+            
+            # Start background music
+            logger.debug("Starting background music")
+            self.sound_manager.play_background_music()
+            
+            # Add timer for health regeneration
+            self.optimal_condition_timer = 0
+            self.REGEN_DELAY = 5.0
+            self.REGEN_RATE = 1.0
+            
+            logger.info("GameScreen initialization completed successfully")
+            
+        except Exception as e:
+            logger.error(f"Error during GameScreen initialization: {str(e)}", exc_info=True)
+            raise
+
     def handle_event(self, event):
+        # Handle tutorial first
         if self.tutorial.active:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 self.tutorial.next_step()
             return
             
+        # Handle other events only if tutorial is not active
         for slider in self.sliders.values():
             slider.handle_event(event)
             
     def update(self, delta_time):
         """Update game state based on time passed since last frame."""
+        # Get current health for animations
+        current_health = self.game_manager.health_system.current_health
+        
         # Always allow player control through sliders
         for action_type, slider in self.sliders.items():
             if slider.active:  # When player is actively moving the slider
@@ -123,18 +155,18 @@ class GameScreen:
             # Reset timer if conditions are not optimal
             self.optimal_condition_timer = 0
             
-        # Add visual feedback for regeneration timer
-        if 0 < self.optimal_condition_timer < self.REGEN_DELAY:
-            self.particle_system.create_healing_preparation_effect()
-        elif self.optimal_condition_timer >= self.REGEN_DELAY:
-            self.particle_system.create_healing_effect()
+        # Update animations and visual elements
+        for school in self.fish_schools:
+            school.update(delta_time, current_health)  # Pass health state to fish animations
             
+        for coral in self.corals:
+            coral.update(delta_time, current_health)
+            
+        self.background.update(delta_time, current_health)
         
-        self.background.update(delta_time, self.game_manager.health_system.current_health)
         self.facts_manager.update(delta_time)
         
         # Play sounds based on health changes
-        current_health = self.game_manager.health_system.current_health
         if current_health < 30:
             self.sound_manager.play_sound("alert")
         
@@ -199,17 +231,29 @@ class GameScreen:
         return health > 70 and getattr(self, "_was_critical", False)
         
     def draw(self):
-        # Draw health bar background (dark red)
-        health_bar_bg = pygame.Rect(50, 50, 300, 30)  # 300 is max width for 100% health
-        pygame.draw.rect(self.screen, (100, 0, 0), health_bar_bg)
+        # Clear the screen first
+        self.screen.fill(config.OCEAN_BLUE)
+        
+        # Draw background
+        self.background.draw()
+        
+        # Draw corals
+        for coral in self.corals:
+            coral.draw(self.screen)
+        
+        # Draw fish schools
+        for school in self.fish_schools:
+            school.draw(self.screen)
         
         # Draw health bar
         health = self.game_manager.health_system.current_health
+        health_bar_bg = pygame.Rect(50, 50, 300, 30)
+        pygame.draw.rect(self.screen, (100, 0, 0), health_bar_bg)
         health_rect = pygame.Rect(50, 50, health * 3, 30)
         health_color = self.get_health_color(health)
         pygame.draw.rect(self.screen, health_color, health_rect)
         
-        # Draw health value and percentage
+        # Draw health text
         health_text = f"{int(health)}/100 ({int(health)}%)"
         health_value = self.font.render(health_text, True, config.WHITE)
         text_rect = health_value.get_rect(midleft=(health_bar_bg.right + 10, health_bar_bg.centery))
@@ -220,14 +264,12 @@ class GameScreen:
             slider.draw(self.screen)
             label = pygame.font.SysFont('arial', 24).render(f"{name}: {slider.value:.1f}", True, config.WHITE)
             self.screen.blit(label, (slider.rect.x, slider.rect.y - 30))
-            
-        # Draw active events
-        y = 100
         
-        # Draw warning message first in yellow
+        # Draw events and warnings
+        y = 100
         warning = self.game_manager.event_system.get_warning_message()
         if warning:
-            warning_text = self.font.render(warning, True, (255, 255, 0))  # Yellow color
+            warning_text = self.font.render(warning, True, (255, 255, 0))
             warning_rect = warning_text.get_rect(center=(config.SCREEN_WIDTH/2, y))
             self.screen.blit(warning_text, warning_rect)
             y += 40
@@ -238,26 +280,30 @@ class GameScreen:
             self.screen.blit(text, (50, y))
             y += 40
         
-        self.background.draw() 
-        
-        # Draw current fact if available
+        # Draw current fact
         fact = self.facts_manager.get_current_fact()
         if fact:
             fact_text = self.font.render(fact, True, config.WHITE)
             fact_rect = fact_text.get_rect(center=(config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT - 50))
-            self.screen.blit(fact_text, fact_rect) 
+            self.screen.blit(fact_text, fact_rect)
         
+        # Draw round information
+        round_info = self.game_manager.get_round_info()
+        round_text = f"Round {round_info['current_round']}/{round_info['total_rounds']}"
+        time_text = f"Time: {int(round_info['time_remaining'])}s"
+        score_text = f"Score: {round_info['score']}"
+        
+        self.screen.blit(self.font.render(round_text, True, config.WHITE), (10, 10))
+        self.screen.blit(self.font.render(time_text, True, config.WHITE), (config.SCREEN_WIDTH - 150, 10))
+        self.screen.blit(self.font.render(score_text, True, config.WHITE), (config.SCREEN_WIDTH//2 - 50, 10))
+        
+        # Draw particles
         self.particle_system.draw()
-        self.tutorial.draw() 
         
-        self.achievement_manager.draw()
-        self.power_up_manager.draw() 
+        # Draw tutorial overlay last
+        if self.tutorial.active:
+            self.tutorial.draw()
         
-        # Draw regeneration timer indicator if conditions are optimal
-        if 0 < self.optimal_condition_timer < self.REGEN_DELAY:
-            progress = self.optimal_condition_timer / self.REGEN_DELAY
-            self.draw_regen_timer(progress)
-            
     def draw_regen_timer(self, progress):
         """Draw a circular progress indicator for regeneration timer."""
         center_x = config.SCREEN_WIDTH - 50

@@ -82,3 +82,17 @@ HEALTH_REGEN_RATE = 1.0   # Health points per second
 # Health regeneration rates
 BASE_HEALTH_REGEN_RATE = 5.0  # Health points per second
 MAX_HEALTH = 100 
+
+# Round settings
+TOTAL_ROUNDS = 10
+ROUND_DURATION = 10.0  # 10 seconds per round for testing
+ROUND_END_DELAY = 3.0  # seconds to show round end screen
+
+# Scoring settings
+BASE_ROUND_SCORE = 100
+HEALTH_SCORE_MULTIPLIER = 1.0
+DIFFICULTY_SCORE_MULTIPLIER = {
+    "easy": 0.8,
+    "normal": 1.0,
+    "hard": 1.5
+} 

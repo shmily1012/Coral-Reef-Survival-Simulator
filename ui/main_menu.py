@@ -6,39 +6,43 @@ from core.game_manager import GameManager
 class MainMenu:
     def __init__(self, screen):
         self.screen = screen
-        self.font = pygame.font.Font(None, 64)
-        self.buttons = {
-            "start": pygame.Rect(412, 300, 200, 50),
-            "instructions": pygame.Rect(412, 400, 200, 50),
-            "quit": pygame.Rect(412, 500, 200, 50)
-        }
+        self.font = pygame.font.Font(None, 48)
+        
+        # Create start button
+        button_width = 200
+        button_height = 50
+        self.start_button = pygame.Rect(
+            config.SCREEN_WIDTH/2 - button_width/2,
+            config.SCREEN_HEIGHT/2 - button_height/2,
+            button_width,
+            button_height
+        )
+        
+        self.button_color = (100, 100, 100)
+        self.hover_color = (150, 150, 150)
+        self.hover = False
         
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_pos = pygame.mouse.get_pos()
-            for button_name, button_rect in self.buttons.items():
-                if button_rect.collidepoint(mouse_pos):
-                    return self.handle_button_click(button_name)
+            if self.start_button.collidepoint(event.pos):
+                return "start"
         return None
-                    
-    def handle_button_click(self, button_name):
-        if button_name == "start":
-            return "start"
-        elif button_name == "instructions":
-            return "instructions"
-        elif button_name == "quit":
-            pygame.quit()
-            sys.exit()
-            
+        
+    def update(self):
+        self.hover = self.start_button.collidepoint(pygame.mouse.get_pos())
+        
     def draw(self):
+        self.screen.fill(config.OCEAN_BLUE)
+        
         # Draw title
-        title = self.font.render("Coral Reef Survival Simulator", True, config.WHITE)
-        title_rect = title.get_rect(center=(config.SCREEN_WIDTH/2, 150))
+        title = self.font.render("Coral Reef Simulator", True, config.WHITE)
+        title_rect = title.get_rect(center=(config.SCREEN_WIDTH/2, config.SCREEN_HEIGHT/3))
         self.screen.blit(title, title_rect)
         
-        # Draw buttons
-        for button_name, button_rect in self.buttons.items():
-            pygame.draw.rect(self.screen, config.WHITE, button_rect)
-            button_text = self.font.render(button_name.title(), True, config.BLACK)
-            text_rect = button_text.get_rect(center=button_rect.center)
-            self.screen.blit(button_text, text_rect) 
+        # Draw start button
+        pygame.draw.rect(self.screen, 
+                        self.hover_color if self.hover else self.button_color,
+                        self.start_button)
+        start_text = self.font.render("Start", True, config.WHITE)
+        text_rect = start_text.get_rect(center=self.start_button.center)
+        self.screen.blit(start_text, text_rect) 
