@@ -2,6 +2,7 @@ import pygame
 import random
 import math
 import config
+import os
 
 class CoralAnimation:
     def __init__(self, x, y):
@@ -56,42 +57,72 @@ class FishAnimation:
         self.speed = random.uniform(50, 100)
         self.direction = 1 if random.random() > 0.5 else -1
         self.fish_count = random.randint(5, 8)
-        self.fish_offsets = [(random.uniform(-20, 20), random.uniform(-10, 10)) 
-                            for _ in range(self.fish_count)]
+        
+        # Load fish images
+        self.fish_images = self.load_fish_images()
+        
+        # Create fish instances with random images and positions
+        self.fishes = []
+        for _ in range(self.fish_count):
+            self.fishes.append({
+                'offset': (random.uniform(-20, 20), random.uniform(-10, 10)),
+                'image': random.choice(self.fish_images),
+                'scale': random.uniform(0.8, 1.2)  # Random size variation
+            })
+            
+    def load_fish_images(self):
+        images = []
+        fish_folder = os.path.join("assets", "images", "fish")
+        reduced_size_by_percent = 0.1
+        try:
+            for filename in os.listdir(fish_folder):
+                if filename.endswith(('.png', '.jpg')):
+                    image_path = os.path.join(fish_folder, filename)
+                    image = pygame.image.load(image_path).convert_alpha()
+                    # Scale image to 30% of original size
+                    new_width = int(image.get_width() * reduced_size_by_percent)
+                    new_height = int(image.get_height() * reduced_size_by_percent)
+                    image = pygame.transform.scale(image, (new_width, new_height))
+                    images.append(image)
+        except:
+            print("Warning: Could not load fish images")
+            # Create a default colored rectangle as fallback
+            fallback = pygame.Surface((40, 30))
+            fallback.fill((255, 165, 0))
+            images.append(fallback)
+        return images
         
     def update(self, delta_time, health_state):
-        # Move fish school
-        self.x += self.speed * delta_time * self.direction
+        # Move fish school in opposite direction
+        self.x -= self.speed * delta_time * self.direction
         
-        # Wrap around screen
-        if self.direction > 0 and self.x > config.SCREEN_WIDTH + 50:
-            self.x = -50
-        elif self.direction < 0 and self.x < -50:
+        # Wrap around screen (reversed logic)
+        if self.direction > 0 and self.x < -50:
             self.x = config.SCREEN_WIDTH + 50
+        elif self.direction < 0 and self.x > config.SCREEN_WIDTH + 50:
+            self.x = -50
             
         # Adjust behavior based on reef health
         if health_state == "stressed":
             self.speed = random.uniform(70, 120)
         elif health_state == "bleached":
             self.speed = random.uniform(100, 150)
-            
     def draw(self, screen):
-        for offset_x, offset_y in self.fish_offsets:
-            fish_x = self.x + offset_x
-            fish_y = self.y + offset_y
+        for fish in self.fishes:
+            fish_x = self.x + fish['offset'][0]
+            fish_y = self.y + fish['offset'][1]
             
-            # Draw simple fish shape
-            points = [
-                (fish_x, fish_y),
-                (fish_x - 15 * self.direction, fish_y - 8),
-                (fish_x - 15 * self.direction, fish_y + 8)
-            ]
-            pygame.draw.polygon(screen, (255, 200, 0), points)  # Yellow fish
+            # Get the fish image and scale it
+            image = fish['image']
+            scaled_size = (
+                int(image.get_width() * fish['scale']),
+                int(image.get_height() * fish['scale'])
+            )
+            scaled_image = pygame.transform.scale(image, scaled_size)
             
-            # Draw tail
-            tail_points = [
-                (fish_x - 15 * self.direction, fish_y - 6),
-                (fish_x - 25 * self.direction, fish_y),
-                (fish_x - 15 * self.direction, fish_y + 6)
-            ]
-            pygame.draw.polygon(screen, (255, 200, 0), tail_points) 
+            # Flip image if moving left
+            if self.direction < 0:
+                scaled_image = pygame.transform.flip(scaled_image, True, False)
+                
+            # Draw the fish
+            screen.blit(scaled_image, (fish_x - scaled_size[0]/2, fish_y - scaled_size[1]/2)) 
