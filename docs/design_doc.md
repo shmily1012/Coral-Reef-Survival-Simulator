@@ -149,27 +149,27 @@ The game is a single-player experience where players take on the role of a coral
 
 ### **Development Roadmap**
 
-#### **Phase 1: Planning and Prototyping**
+#### **Phase 1: Planning and Prototyping** (12/29/2024~12/31/2024)
 - [ ] Create initial design and mockups.
 - [ ] Set up `pygame` framework.
 - [ ] Implement basic game loop.
 
-#### **Phase 2: Core Gameplay**
+#### **Phase 2: Core Gameplay** (1/1/2025~1/2/2025)
 - [ ] Add sliders for temperature, salinity, pH, light exposure, and nutrient levels.
 - [ ] Implement health system.
 - [ ] Add random events and effects.
 
-#### **Phase 3: Visual and Audio Enhancements**
+#### **Phase 3: Visual and Audio Enhancements** (1/2/2025~1/3/2025)
 - [ ] Add background and sprite animations.
 - [ ] Integrate sound effects and background music.
 - [ ] Create visual feedback for health changes.
 
-#### **Phase 4: Testing and Polishing**
+#### **Phase 4: Testing and Polishing** (1/2/2025~1/3/2025)
 - [ ] Test for bugs and balance gameplay.
 - [ ] Add educational facts and fun animations.
 - [ ] Finalize UI and UX.
 
-#### **Phase 5: Release**
+#### **Phase 5: Release** (1/4/2025)
 - [ ] Package the game for distribution.
 - [ ] Create documentation and instructions.
 
