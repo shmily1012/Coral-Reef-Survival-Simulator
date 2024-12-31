@@ -1,6 +1,20 @@
 import pygame
 import os
 
+"""
+Sound Manager Module
+
+Handles all audio aspects of the game, including sound effects and background music.
+Manages loading, playing, and volume control of various audio elements.
+
+Features:
+- Background music management
+- Sound effect handling
+- Volume control
+- Warning sound system
+- Error handling for missing audio files
+"""
+
 class SoundManager:
     def __init__(self):
         pygame.mixer.init()
@@ -10,6 +24,12 @@ class SoundManager:
         
         # Load sound effects
         self.load_sounds()
+        try:
+            self.warning_sound = pygame.mixer.Sound("assets/audio/warning.wav")
+        except:
+            self.warning_sound = None
+            print("Warning: Could not load warning sound")
+        self.warning_played = False
         
     def load_sounds(self):
         sound_files = {
@@ -51,3 +71,14 @@ class SoundManager:
             sound.set_volume(self.volume)
         if self.music_playing:
             pygame.mixer.music.set_volume(self.volume * 0.5) 
+            
+    def play_warning(self):
+        if not self.warning_played:
+            if self.warning_sound:
+                self.warning_sound.play()
+            else:
+                print("Warning: No warning sound loaded")
+            
+            self.warning_played = True
+    def reset_warning(self):
+        self.warning_played = False 

@@ -2,6 +2,19 @@ import json
 import random
 import os
 
+"""
+Facts Manager Module
+
+Manages educational facts about coral reefs that are displayed during gameplay.
+Provides relevant information based on game events and coral health status.
+
+Features:
+- Fact rotation system
+- Context-sensitive fact selection
+- Timed display management
+- Educational content integration
+"""
+
 class FactsManager:
     def __init__(self):
         self.facts = self.load_facts()

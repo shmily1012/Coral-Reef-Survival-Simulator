@@ -68,3 +68,62 @@ class ParticleSystem:
     def draw(self):
         for particle in self.particles:
             particle.draw(self.screen) 
+
+    def create_healing_preparation_effect(self):
+        """Create particles indicating preparation for healing."""
+        for _ in range(2):
+            x = random.randint(0, config.SCREEN_WIDTH)
+            y = config.SCREEN_HEIGHT - random.randint(50, 150)
+            
+            velocity = (
+                random.uniform(-20, 20),
+                random.uniform(-40, -20)
+            )
+            
+            # Create light green particles with transparency
+            self.particles.append(
+                Particle(
+                    x, y,
+                    color=(200, 255, 200),  # Light green
+                    velocity=velocity,
+                    lifetime=random.uniform(0.5, 1.0),
+                    size=random.uniform(2, 4)
+                )
+            )
+
+    def create_healing_effect(self):
+        """Create particles for active healing effect."""
+        for _ in range(3):
+            x = random.randint(0, config.SCREEN_WIDTH)
+            y = config.SCREEN_HEIGHT - random.randint(50, 150)
+            
+            velocity = (
+                random.uniform(-10, 10),
+                random.uniform(-30, -10)
+            )
+            
+            # Create brighter green particles
+            self.particles.append(
+                Particle(
+                    x, y,
+                    color=(100, 255, 100),  # Bright green
+                    velocity=velocity,
+                    lifetime=random.uniform(1.0, 1.5),
+                    size=random.uniform(3, 6)
+                )
+            ) 
+
+"""
+Particle System Module
+
+Manages particle effects for various game events and states.
+Creates visual feedback through particle animations for events,
+warnings, and environmental changes.
+
+Features:
+- Dynamic particle generation
+- Warning effect particles
+- Healing effect particles
+- Particle lifetime management
+- Alpha blending for smooth effects
+""" 

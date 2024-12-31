@@ -1,5 +1,6 @@
 
-
+.venv/
+.vscode/
 # Other binary files
 *.pyc
 __pycache__/

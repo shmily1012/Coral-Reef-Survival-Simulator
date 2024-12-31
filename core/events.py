@@ -1,67 +1,130 @@
+"""
+Event System Module
+
+This module manages environmental events that affect the coral reef ecosystem.
+It handles the creation, timing, and effects of various events like temperature changes,
+pH fluctuations, and salinity variations.
+
+Key Features:
+- Event scheduling with warning system
+- Single event at a time to prevent overwhelming players
+- Cooldown periods between events
+- Warning notifications before events occur
+"""
+
 import random
 import config
 
 class Event:
-    def __init__(self, name, description, duration, effects):
-        self.name = name
+    """
+    Represents a single environmental event affecting the coral reef.
+    
+    Attributes:
+        description (str): Human-readable description of the event
+        effects (dict): Environmental effects of the event (temperature, pH, salinity)
+        duration (float): How long the event lasts in seconds
+        time_remaining (float): Time until event ends
+        cooldown (float): Minimum time before next event can start
+    """
+    def __init__(self, description, effects):
         self.description = description
-        self.duration = duration  # in seconds
         self.effects = effects
-        self.time_remaining = duration
+        self.duration = random.uniform(5.0, 8.0)  # Events last 5-8 seconds
+        self.time_remaining = self.duration
+        self.cooldown = 10.0  # Increased cooldown to 10 seconds minimum
 
 class EventSystem:
     def __init__(self):
         self.active_events = []
-        self.time_until_next_event = random.uniform(10, 30)
-        self.events_pool = self._create_events_pool()
-        self.events_handled = 0  # Add this line to track handled events
-        self.event_blocked = False  # For power-up functionality
+        self.event_timer = 0
+        self.event_interval = random.uniform(15.0, 20.0)  # Longer interval between events
+        self.events_handled = 0
+        self.cooldown_timer = 0
+        self.min_gap_between_events = 10.0  # Minimum time between events
+        self.warning_time = 5.0  # 5 second warning before event
+        self.pending_event = None  # Store the upcoming event
+        self.is_warning = False  # Track if we're in warning phase
         
-    def _create_events_pool(self):
-        return [
-            Event("Heat Wave", 
-                  "Water temperature is rising rapidly!", 
-                  15, 
-                  {"temperature": 2}),
-            Event("Ocean Acidification", 
-                  "pH levels are dropping!", 
-                  12, 
-                  {"ph": -0.3}),
-            Event("Freshwater Influx", 
-                  "Heavy rains are affecting salinity!", 
-                  10, 
-                  {"salinity": -2}),
-            Event("Recovery Period", 
-                  "Conditions are temporarily stabilizing.", 
-                  8, 
-                  {"health_boost": 5})
+        # Define possible events and their effects
+        self.possible_events = [
+            {
+                "description": "Heat wave approaching!",
+                "effects": {"temperature": 3.0}
+            },
+            {
+                "description": "Cold current detected!",
+                "effects": {"temperature": -3.0}
+            },
+            {
+                "description": "Acid rain affecting the area!",
+                "effects": {"ph": -0.5}
+            },
+            {
+                "description": "Agricultural runoff detected!",
+                "effects": {"ph": 0.3}
+            },
+            {
+                "description": "Heavy rainfall reducing salinity!",
+                "effects": {"salinity": -2.0}
+            },
+            {
+                "description": "Increased evaporation!",
+                "effects": {"salinity": 2.0}
+            }
         ]
-        
+
     def update(self, delta_time):
-        # Update active events
-        for event in self.active_events[:]:  # Create copy for safe removal
-            event.time_remaining -= delta_time
-            if event.time_remaining <= 0:
-                self.active_events.remove(event)
-                self.events_handled += 1  # Increment counter when event is handled
-                
-        # Check for new event
-        self.time_until_next_event -= delta_time
-        if self.time_until_next_event <= 0:
-            self.trigger_random_event()
-            self.time_until_next_event = random.uniform(10, 30)
-            
-    def trigger_random_event(self):
-        if self.events_pool and len(self.active_events) < 2:  # Max 2 concurrent events
-            event = random.choice(self.events_pool)
-            self.active_events.append(event)
-            return event
-        return None
-    
-    def get_current_effects(self):
-        """Returns combined effects of all active events"""
-        combined_effects = {}
+        # Update cooldown timer
+        if self.cooldown_timer > 0:
+            self.cooldown_timer -= delta_time
+            return
+
+        # Update existing events
+        new_active_events = []
         for event in self.active_events:
-            for effect_type, value in event.effects.items():
-                combined_effects[effect_type] = combined_effects.get(effect_type, 0) + value
+            event.time_remaining -= delta_time
+            if event.time_remaining > 0:
+                new_active_events.append(event)
+            else:
+                # When event ends, ensure minimum gap by setting cooldown
+                self.cooldown_timer = max(event.cooldown, self.min_gap_between_events)
+        self.active_events = new_active_events
+
+        # Generate and handle warnings/events
+        if not self.active_events and self.cooldown_timer <= 0:
+            self.event_timer += delta_time
+            
+            if self.event_timer >= self.event_interval - self.warning_time and not self.is_warning:
+                # Start warning phase
+                self.is_warning = True
+                self._generate_pending_event()
+            
+            elif self.event_timer >= self.event_interval:
+                # Convert pending event to active event
+                self.event_timer = 0
+                self.event_interval = random.uniform(15.0, 20.0)
+                self.is_warning = False
+                if self.pending_event:
+                    self.active_events.append(self.pending_event)
+                    self.events_handled += 1
+                    self.pending_event = None
+
+    def _generate_pending_event(self):
+        event_data = random.choice(self.possible_events)
+        self.pending_event = Event(event_data["description"], event_data["effects"])
+
+    def get_warning_message(self):
+        """Get the warning message for the pending event."""
+        if self.is_warning and self.pending_event:
+            return f"WARNING: {self.pending_event.description}"
+        return None
+
+    def get_current_effects(self):
+        """Return combined effects of all active events."""
+        combined_effects = {"temperature": 0, "ph": 0, "salinity": 0}
+        # Since we now only have one event at a time, this is simpler
+        if self.active_events:
+            event = self.active_events[0]
+            for factor, change in event.effects.items():
+                combined_effects[factor] = change
         return combined_effects 

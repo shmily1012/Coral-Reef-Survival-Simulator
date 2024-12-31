@@ -1,10 +1,25 @@
+"""
+Configuration Module
+
+Central configuration file containing game constants and settings.
+Defines environmental parameters, health thresholds, and game balance values.
+
+Contains:
+- Screen dimensions
+- Color definitions
+- Environmental thresholds
+- Game difficulty settings
+- Health regeneration parameters
+- Event timing configurations
+"""
+
 # Screen settings
 SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 768
 FPS = 60
 
 # Colors
-OCEAN_BLUE = (0, 127, 255)
+OCEAN_BLUE = (0, 105, 148)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -51,4 +66,19 @@ DIFFICULTY_SETTINGS = {
         "damage_multiplier": 1.25,
         "starting_health": 80
     }
-} 
+}
+
+# Health regeneration settings
+HEALTH_REGEN_THRESHOLDS = {
+    "temperature": 0.5,  # Maximum deviation from optimal for regeneration
+    "ph": 0.1,
+    "salinity": 0.5
+}
+
+# Health regeneration timing
+HEALTH_REGEN_DELAY = 5.0  # Seconds before regeneration starts
+HEALTH_REGEN_RATE = 1.0   # Health points per second
+
+# Health regeneration rates
+BASE_HEALTH_REGEN_RATE = 5.0  # Health points per second
+MAX_HEALTH = 100 
