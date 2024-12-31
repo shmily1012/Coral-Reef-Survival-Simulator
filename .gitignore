@@ -1,4 +1,6 @@
 
-/myenv
-/__pycache__
-/core/__pycache__
+
+# Other binary files
+*.pyc
+__pycache__/
+/visuals/__pycache__
