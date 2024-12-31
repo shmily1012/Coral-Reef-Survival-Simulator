@@ -28,6 +28,18 @@ class Particle:
             screen.blit(surface, (int(self.x - self.size), int(self.y - self.size)))
 
 class ParticleSystem:
+    """
+    A system for managing and rendering particle effects.
+    
+    This class handles creation, updating and drawing of particle effects like bubbles
+    and warning indicators. It maintains a list of active particles and automatically
+    removes them when their lifetime expires.
+    
+    Attributes:
+        screen: The pygame surface to draw particles on
+        particles: List of active Particle objects
+    """
+    
     def __init__(self, screen):
         self.screen = screen
         self.particles = []
