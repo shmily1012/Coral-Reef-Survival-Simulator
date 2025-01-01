@@ -10,6 +10,16 @@ class BackgroundManager:
         self.bubbles = []
         self.health_state = 100  # Initialize with full health
         
+        # Add water current particles
+        self.water_particles = []
+        for _ in range(50):  # Create 50 water current particles
+            self.water_particles.append({
+                'x': random.randint(0, config.SCREEN_WIDTH),
+                'y': random.randint(0, config.SCREEN_HEIGHT),
+                'speed': random.uniform(10, 30),
+                'alpha': random.randint(20, 60)  # Transparency
+            })
+        
         # Create background corals
         for _ in range(5):
             x = random.randint(0, config.SCREEN_WIDTH)
@@ -35,6 +45,13 @@ class BackgroundManager:
                 health_value = 100  # Default to full health if conversion fails
         
         self.health_state = health_value
+        
+        # Update water current particles
+        for particle in self.water_particles:
+            particle['x'] += particle['speed'] * delta_time
+            if particle['x'] > config.SCREEN_WIDTH:
+                particle['x'] = -5
+                particle['y'] = random.randint(0, config.SCREEN_HEIGHT)
         
         # Update background corals
         for coral in self.corals:
@@ -72,11 +89,21 @@ class BackgroundManager:
         
     def draw(self):
         """Draw all background elements."""
-        # Draw background corals
+        # Draw water current particles first
+        water_surface = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)
+        for particle in self.water_particles:
+            pygame.draw.circle(
+                water_surface,
+                (255, 255, 255, particle['alpha']),
+                (int(particle['x']), int(particle['y'])),
+                1
+            )
+        self.screen.blit(water_surface, (0, 0))
+        
+        # Draw the rest of the elements
         for coral in self.corals:
             coral.draw(self.screen)
             
-        # Draw bubbles
         for bubble in self.bubbles:
             pygame.draw.circle(
                 self.screen,

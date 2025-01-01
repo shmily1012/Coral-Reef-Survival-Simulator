@@ -89,15 +89,13 @@ class CoralReefSimulator:
         current_state = self.game_manager.game_state
         if current_state == "menu":
             self.screens["menu"].update()
-        elif current_state == "playing":  # Changed from "game" to "playing"
+        elif current_state == "playing":
             self.game_manager.update(delta_time)
-            self.screens["playing"].update(delta_time)  # Changed from "game" to "playing"
+            self.screens["playing"].update(delta_time)
             self.visual_feedback.update(delta_time)
         elif current_state == "round_end":
             self.screens["round_end"].update()
-        elif current_state == "game_over":
-            self.screens["game_over"].update()
-                
+        
     def draw(self):
         # Always draw the ocean background first
         self.ocean_background.draw()
@@ -108,7 +106,7 @@ class CoralReefSimulator:
             self.screens[current_state].draw()
         
         # Draw visual feedback only during gameplay
-        if current_state == "playing":  # Changed from "game" to "playing"
+        if current_state == "playing":
             self.visual_feedback.draw()
             
         # Update the display

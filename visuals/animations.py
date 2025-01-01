@@ -332,19 +332,46 @@ class FishAnimation:
             delta_time (float): Time since last update
             health_state (float): Current coral health (0-100)
         """
-        # Adjust fish behavior based on health state
-        if health_state > 70:
-            # Happy, healthy behavior
-            pass
-        elif health_state > 30:
-            # Cautious behavior
-            pass
-        else:
-            # Distressed behavior
-            pass
+        # Update schooling behavior timer
+        self.schooling_timer += delta_time
+        if self.schooling_timer >= self.schooling_interval:
+            self.schooling_timer = 0
+            # Vary movement based on health
+            if health_state > 70:
+                # Happy, relaxed movement
+                self.target_y = self.y + random.uniform(-50, 50)
+                self.speed = random.uniform(50, 100)
+            elif health_state > 30:
+                # More erratic movement
+                self.target_y = self.y + random.uniform(-100, 100)
+                self.speed = random.uniform(100, 150)
+            else:
+                # Panicked movement
+                self.target_y = self.y + random.uniform(-150, 150)
+                self.speed = random.uniform(150, 200)
             
-        # Update fish position and animation
-        # ... animation code ...
+            # Keep fish within screen bounds
+            self.target_y = max(50, min(config.SCREEN_HEIGHT - 150, self.target_y))
+            self.schooling_interval = random.uniform(3, 6)
+
+        # Smooth vertical movement
+        y_diff = self.target_y - self.y
+        self.vertical_speed = y_diff * 2 * delta_time
+        self.y += self.vertical_speed
+
+        # Horizontal movement
+        speed_multiplier = 1.0
+        if health_state < 30:
+            speed_multiplier = 1.6  # Faster when coral is unhealthy
+        elif health_state < 70:
+            speed_multiplier = 1.3  # Slightly faster when coral is stressed
+
+        self.x += self.speed * delta_time * self.direction * speed_multiplier
+
+        # Reset position when off screen
+        if (self.direction > 0 and self.x > config.SCREEN_WIDTH + 100) or \
+           (self.direction < 0 and self.x < -100):
+            self.reset_position()
 
     def draw(self, screen):
         for fish in self.fishes:

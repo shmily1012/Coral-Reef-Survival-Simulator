@@ -84,8 +84,8 @@ BASE_HEALTH_REGEN_RATE = 5.0  # Health points per second
 MAX_HEALTH = 100 
 
 # Round settings
-TOTAL_ROUNDS = 10
-ROUND_DURATION = 10.0  # 10 seconds per round for testing
+TOTAL_ROUNDS = 2       # 10 rounds by default
+ROUND_DURATION = 60.0  # 60sec by default, 10 seconds per round for testing
 ROUND_END_DELAY = 3.0  # seconds to show round end screen
 
 # Scoring settings

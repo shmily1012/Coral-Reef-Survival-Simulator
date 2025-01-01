@@ -78,11 +78,26 @@ class GameScreen:
             ]
             logger.info(f"Created {len(self.corals)} coral animations")
             
-            # Create fish schools
+            # Create fish schools with different behaviors
             logger.debug("Creating fish schools")
-            self.fish_schools = [
-                FishAnimation(screen) for _ in range(3)
-            ]
+            self.fish_schools = []
+            
+            # Surface fish school
+            surface_school = FishAnimation(screen)
+            surface_school.y = config.SCREEN_HEIGHT * 0.2  # Near surface
+            surface_school.target_y = surface_school.y
+            
+            # Middle fish school
+            middle_school = FishAnimation(screen)
+            middle_school.y = config.SCREEN_HEIGHT * 0.5  # Middle of screen
+            middle_school.target_y = middle_school.y
+            
+            # Deep fish school
+            deep_school = FishAnimation(screen)
+            deep_school.y = config.SCREEN_HEIGHT * 0.7  # Deeper water
+            deep_school.target_y = deep_school.y
+            
+            self.fish_schools.extend([surface_school, middle_school, deep_school])
             logger.info(f"Created {len(self.fish_schools)} fish schools")
             
             # Create sliders
